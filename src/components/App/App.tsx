@@ -6,7 +6,7 @@ import MovieModal from '../MovieModal/MovieModal';
 import toast, { Toaster } from 'react-hot-toast';
 import type { Movie } from '../../types/movie';
 import css from './App.module.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { fetchMovies } from '../../services/movieService';
 import { useQuery, keepPreviousData} from '@tanstack/react-query';
 import ReactPaginate from 'react-paginate';
@@ -17,7 +17,7 @@ function App() {
   const [currentPage, setCurrentPage] =useState(1)
   const [chosenMovie, setChosenMovie] = useState<Movie | null>(null);
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, isSuccess } = useQuery({
     queryKey: ['movies', title, currentPage],
     queryFn: () => fetchMovies(title, currentPage),
     enabled: title.trim().length > 0,
@@ -28,13 +28,14 @@ function App() {
     setTitle(searchQuery);
     setCurrentPage(1);
   };
-
-  if (data?.results.length === 0 ) {
+   useEffect(() => {
+        if (isSuccess && data?.results.length === 0 ) {
      toast("No movies found for your request.", {
         duration: 3000,
         position: "top-center",
       })
   };
+    }, [isSuccess, data]);
   
   const openModal = (oneMovie: Movie) => {
     setChosenMovie(oneMovie);
@@ -49,7 +50,7 @@ function App() {
   return (
     <div className={css.app}>
       <SearchBar onSubmit={handleSearch} />
-      {totalPages > 0 && <ReactPaginate
+      {totalPages > 1 && <ReactPaginate
         pageCount={totalPages}
         pageRangeDisplayed={5}
         marginPagesDisplayed={1}
